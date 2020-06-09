@@ -194,7 +194,7 @@ export class App<
         const { user, controller } = this.getUserHandle(userOrId);
         // If active - log out the user
         if (user.state === UserState.Active) {
-            await this.logOut(user);
+            await user.logOut();
         }
         // Set the state of the user
         controller.setState(UserState.Removed);
