@@ -117,7 +117,7 @@ void AppClass<T>::constructor(ContextType ctx, ObjectType this_object, Arguments
 
         ValueType config_url_value = Object::get_property(ctx, config_object, config_url);
         if (Value::is_undefined(ctx, config_url_value)) {
-            config.base_url = util::Optional<std::string>("https://cloud.mongodb.com");
+            config.base_url = util::Optional<std::string>("https://realm.mongodb.com/");
         }
         else {
             config.base_url = util::Optional<std::string>(Value::validated_to_string(ctx, config_url_value, "url"));
