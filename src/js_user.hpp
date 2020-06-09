@@ -95,6 +95,8 @@ public:
     static void call_function(ContextType, ObjectType, Arguments&, ReturnValue&);
     static void auth_api_keys(ContextType, ObjectType, Arguments&, ReturnValue&);
     static void refresh_custom_data(ContextType, ObjectType, Arguments&, ReturnValue&);
+    static void push_register(ContextType, ObjectType, Arguments&, ReturnValue&);
+    static void push_deregister(ContextType, ObjectType, Arguments&, ReturnValue&);
 
 
     MethodMap<T> const methods = {
@@ -104,6 +106,8 @@ public:
         {"_callFunction", wrap<call_function>},
         {"_authApiKeys", wrap<auth_api_keys>},
         {"_refreshCustomData", wrap<refresh_custom_data>},
+        {"_pushRegister", wrap<push_register>},
+        {"_pushDeregister", wrap<push_deregister>},
     };
 };
 
@@ -304,5 +308,54 @@ void UserClass<T>::refresh_custom_data(ContextType ctx, ObjectType this_object, 
         }));
 }
 
+template<typename T>
+void UserClass<T>::push_register(ContextType ctx, ObjectType this_object, Arguments& args, ReturnValue &return_value) {
+    args.validate_count(3);
+    auto user = get_internal<T, UserClass<T>>(ctx, this_object);
+    auto service = Value::validated_to_string(ctx, args[0], "service");
+    auto token = Value::validated_to_string(ctx, args[1], "token");
+    auto callback = Value::validated_to_function(ctx, args[2], "callback");
+
+    user->m_app->push_notification_client(service).register_device(
+        token,
+        *user,
+        realm::util::EventLoopDispatcher([ctx = Protected(Context<T>::get_global_context(ctx)),
+                            callback = Protected(ctx, callback),
+                            this_object = Protected(ctx, this_object)]
+                           (util::Optional<app::AppError> error) {
+            HANDLESCOPE(ctx);
+            Function::callback(ctx, callback, this_object, {
+                !error ? Value::from_undefined(ctx) : Object::create_obj(ctx, {
+                    {"message", Value::from_string(ctx, error->message)},
+                    {"code", Value::from_number(ctx, error->error_code.value())},
+                }),
+            });
+        }));
+}
+
+template<typename T>
+void UserClass<T>::push_deregister(ContextType ctx, ObjectType this_object, Arguments& args, ReturnValue &return_value) {
+    args.validate_count(3);
+    auto user = get_internal<T, UserClass<T>>(ctx, this_object);
+    auto service = Value::validated_to_string(ctx, args[0], "service");
+    auto token = Value::validated_to_string(ctx, args[1], "token");
+    auto callback = Value::validated_to_function(ctx, args[2], "callback");
+
+    user->m_app->push_notification_client(service).register_device(
+        token,
+        *user,
+        realm::util::EventLoopDispatcher([ctx = Protected(Context<T>::get_global_context(ctx)),
+                            callback = Protected(ctx, callback),
+                            this_object = Protected(ctx, this_object)]
+                           (util::Optional<app::AppError> error) {
+            HANDLESCOPE(ctx);
+            Function::callback(ctx, callback, this_object, {
+                !error ? Value::from_undefined(ctx) : Object::create_obj(ctx, {
+                    {"message", Value::from_string(ctx, error->message)},
+                    {"code", Value::from_number(ctx, error->error_code.value())},
+                }),
+            });
+        }));
+}
 }
 }

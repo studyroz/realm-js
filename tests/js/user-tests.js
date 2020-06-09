@@ -165,6 +165,23 @@ module.exports = {
     TestCase.assertEqual(await collection.count({hello: "pineapple"}), 0);
   },
 
+  async testPush() {
+    let app = new Realm.App(appConfig);
+    let credentials = Realm.Credentials.anonymous();
+    let user = await app.logIn(credentials);
+
+    let push = user.push('gcm');
+
+    await push.register("hello");
+    await push.register("hello"); // double register not an error
+    await push.deregister("hello");
+    await push.deregister("hello"); // double deregister not an error
+    await push.deregister("hellooooo"); // deregister never registered not an error
+
+    const err = await TestCase.assertThrowsAsync(async() => await user.push('nonesuch').register('hello'))
+    TestCase.assertEqual(err.message, "service not found: 'nonesuch'");
+  },
+
   testAll() {
     let app = new Realm.App(appConfig);
     Object.keys(app.allUsers()).forEach(id => users[id].logOut()); // FIXME: we need to reset users for each test
