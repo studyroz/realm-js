@@ -94,7 +94,7 @@ describe("User", () => {
         });
     });
 
-    it("provides a controller which state", () => {
+    it("provides a controller to update state", () => {
         const user = new User({
             app: new MockApp("my-mocked-app"),
             id: "some-user-id",
