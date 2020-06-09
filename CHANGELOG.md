@@ -4,7 +4,7 @@ x.x.x Release notes (yyyy-MM-dd)
 * None.
 
 ### Fixed
-* Fixed the default app URL.
+* None.
 
 ### Compatibility
 * MongoDB Realm Cloud.
@@ -12,7 +12,7 @@ x.x.x Release notes (yyyy-MM-dd)
 * File format: generates Realms with format v11 (reads and upgrades file format v5 or later).
 
 ### Internal
-* None.
+* Use object store's default URL.
 
 10.0.0-beta.5 Release notes (2020-6-8)
 =============================================================
