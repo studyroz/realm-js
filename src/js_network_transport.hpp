@@ -180,30 +180,28 @@ struct JavaScriptNetworkTransport : public JavaScriptNetworkTransportWrapper<T> 
         network_transport = Object::get_property(m_ctx, realm_constructor, "_networkTransport");
     };
 
-    void send_request_to_server(const app::Request request, std::function<void(const app::Response)> completion_callback) override {
-        // Create a response handler
-        ObjectType response_handler = ResponseHandlerClass<T>::create_instance(m_ctx, std::move(completion_callback));
-
-        // Create a JavaScript version of the request
-        ObjectType request_object = Object::create_empty(m_ctx);
-        Object::set_property(m_ctx, request_object, "method", Value::from_string(m_ctx, fromHttpMethod(request.method)));
-        Object::set_property(m_ctx, request_object, "url", Value::from_string(m_ctx, request.url));
-        Object::set_property(m_ctx, request_object, "timeoutMs", Value::from_number(m_ctx, request.timeout_ms));
-        if (!request.body.empty()) {
-            Object::set_property(m_ctx, request_object, "body", Value::from_string(m_ctx, request.body));
-        }
-        ObjectType headers_object = Object::create_empty(m_ctx);
+    static ObjectType makeRequest(ContextType ctx, const app::Request& request) {
+        ObjectType headers_object = Object::create_empty(ctx);
         for (auto header : request.headers) {
-            Object::set_property(m_ctx, headers_object, header.first, Value::from_string(m_ctx, header.second));
+            Object::set_property(ctx, headers_object, header.first, Value::from_string(ctx, header.second));
         }
-        Object::set_property(m_ctx, request_object, "headers", headers_object);
+        auto request_object = Object::create_obj(ctx, {
+            {"method", Value::from_string(ctx, fromHttpMethod(request.method))},
+            {"url", Value::from_string(ctx, request.url)},
+            {"timeoutMs", Value::from_number(ctx, request.timeout_ms)},
+            {"headers", headers_object},
+        });
+        if (!request.body.empty()) {
+            Object::set_property(ctx, request_object, "body", Value::from_string(ctx, request.body));
+        }
+        return request_object;
+    }
 
-        ValueType arguments[] = {
-            request_object,
-            response_handler,
-        };
-
-        Object::call_method(m_ctx, Value::to_object(m_ctx, network_transport), "fetchWithCallbacks", 2, arguments);
+    void send_request_to_server(const app::Request request, std::function<void(const app::Response)> completion_callback) override {
+        Object::call_method(m_ctx, Value::to_object(m_ctx, network_transport), "fetchWithCallbacks", {
+            makeRequest(m_ctx, request),
+            ResponseHandlerClass<T>::create_instance(m_ctx, std::move(completion_callback)),
+        });
     }
 
 private:
