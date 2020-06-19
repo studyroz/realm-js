@@ -81,6 +81,7 @@ describe("App", () => {
     });
 
     it("can log in a user", async () => {
+        const storage = new MemoryStorage();
         const transport = new MockNetworkTransport([
             {
                 user_id: "totally-valid-user-id",
@@ -106,6 +107,7 @@ describe("App", () => {
         ]);
         const app = new App({
             id: "default-app-id",
+            storage,
             transport,
             baseUrl: "http://localhost:1337",
         });
@@ -147,6 +149,7 @@ describe("App", () => {
     });
 
     it("can log out a user", async () => {
+        const storage = new MemoryStorage();
         const transport = new MockNetworkTransport([
             {
                 user_id: "totally-valid-user-id",
@@ -158,6 +161,7 @@ describe("App", () => {
         const app = new App({
             id: "default-app-id",
             transport,
+            storage,
             baseUrl: "http://localhost:1337",
         });
         const credentials = Credentials.anonymous();
@@ -191,6 +195,7 @@ describe("App", () => {
     });
 
     it("can remove an active user", async () => {
+        const storage = new MemoryStorage();
         const transport = new MockNetworkTransport([
             {
                 user_id: "totally-valid-user-id",
@@ -201,6 +206,7 @@ describe("App", () => {
         ]);
         const app = new App({
             id: "default-app-id",
+            storage,
             transport,
             baseUrl: "http://localhost:1337",
         });
@@ -235,6 +241,7 @@ describe("App", () => {
     });
 
     it("expose a callable functions factory", async () => {
+        const storage = new MemoryStorage();
         const transport = new MockNetworkTransport([
             {
                 user_id: "totally-valid-user-id",
@@ -245,6 +252,7 @@ describe("App", () => {
         ]);
         const app = new App({
             id: "default-app-id",
+            storage,
             transport,
             baseUrl: "http://localhost:1337",
         });
@@ -296,6 +304,14 @@ describe("App", () => {
         const alicesStorage = appStorage.prefix("user(alices-id)");
         alicesStorage.set("accessToken", "alices-access-token");
         alicesStorage.set("refreshToken", "alices-refresh-token");
+        alicesStorage.set(
+            "profile",
+            JSON.stringify({
+                type: "normal",
+                identities: [],
+                firstName: "Alice",
+            }),
+        );
 
         const bobsStorage = appStorage.prefix("user(bobs-id)");
         bobsStorage.set("accessToken", "bobs-access-token");
@@ -314,6 +330,7 @@ describe("App", () => {
         expect(alice.id).equals("alices-id");
         expect(alice.accessToken).equals("alices-access-token");
         expect(alice.refreshToken).equals("alices-refresh-token");
+        expect(alice.profile.firstName).equals("Alice");
 
         const bob = app.allUsers[1];
         expect(bob.id).equals("bobs-id");
@@ -427,12 +444,11 @@ describe("App", () => {
             JSON.stringify(["bobs-id", "alices-id", "charlies-id"]),
         );
 
-        // Removing Bob from the app, removes his id from apps storage
+        // Removing Bob from the app, removes his profile and id from the app's storage
         await app1.removeUser(bob);
         expect(bobsStorage.get("profile")).equals(null);
         expect(appStorage.get("userIds")).equals(
             JSON.stringify(["alices-id", "charlies-id"]),
         );
-        console.log((storage as any).storage);
     });
 });
