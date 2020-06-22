@@ -41,3 +41,4 @@ export function app(id: string) {
 export { App };
 export { Credentials } from "./Credentials";
 export { User, UserState } from "./User";
+export { createDefaultStorage } from "./storage";
