@@ -22,6 +22,7 @@ export {
     Request,
     Response,
     Method,
+    ResponseHandler,
     SuccessCallback,
     ErrorCallback,
 } from "./NetworkTransport";
