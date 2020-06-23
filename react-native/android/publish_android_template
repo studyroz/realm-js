@@ -21,6 +21,20 @@ allprojects {
 
 apply plugin: 'com.android.library'
 
+android {
+    compileSdkVersion rootProject.hasProperty("compileSdkVersion") ? rootProject.compileSdkVersion : 28
+    buildToolsVersion rootProject.hasProperty("buildToolsVersion") ? rootProject.buildToolsVersion : "28.0.3"
+
+    defaultConfig {
+        minSdkVersion rootProject.hasProperty("minSdkVersion") ? rootProject.minSdkVersion : 16
+        targetSdkVersion rootProject.hasProperty("targetSdkVersion") ? rootProject.targetSdkVersion : 28
+    }
+
+    tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn forwardDebugPort
+    }
+}
+
 task forwardDebugPort(type: Exec) {
     def adb = android.getAdbExe()?.toString() ?: 'false'
     commandLine adb, 'forward', 'tcp:8083', 'tcp:8083'
@@ -37,20 +51,6 @@ task forwardDebugPort(type: Exec) {
                 '===========================================================================\n'
             )
         }
-    }
-}
-
-android {
-    compileSdkVersion rootProject.hasProperty("compileSdkVersion") ? rootProject.compileSdkVersion : 28
-    buildToolsVersion rootProject.hasProperty("buildToolsVersion") ? rootProject.buildToolsVersion : "28.0.3"
-
-    defaultConfig {
-        minSdkVersion rootProject.hasProperty("minSdkVersion") ? rootProject.minSdkVersion : 16
-        targetSdkVersion rootProject.hasProperty("targetSdkVersion") ? rootProject.targetSdkVersion : 28
-    }
-
-    tasks.withType(JavaCompile) {
-        compileTask -> compileTask.dependsOn forwardDebugPort
     }
 }
 
